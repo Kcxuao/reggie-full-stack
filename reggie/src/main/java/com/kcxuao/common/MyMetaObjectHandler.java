@@ -20,7 +20,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         log.info("自动填充【 新增 】");
 
-        Long id = Long.valueOf(RedisUtils.get("id"));
+        Long id = Long.valueOf((String) RedisUtils.get("id"));
 
         try {
             metaObject.setValue("updateTime", LocalDateTime.now());
@@ -31,14 +31,14 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         } catch (ReflectionException ex) {
             metaObject.setValue("createTime", LocalDateTime.now());
             log.error(ex.getMessage());
-        };
+        }
     }
 
     @Override
     public void updateFill(MetaObject metaObject) {
         log.info("自动填充【 修改 】");
 
-        Long id = Long.valueOf(RedisUtils.get("id"));
+        Long id = Long.valueOf((String) RedisUtils.get("id"));
 
         metaObject.setValue("updateUser", id);
         metaObject.setValue("updateTime", LocalDateTime.now());

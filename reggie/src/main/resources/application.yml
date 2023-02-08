@@ -48,7 +48,7 @@ mybatis-plus:
       id-type: ASSIGN_ID
 
 reggie:
-  dirPath: reggie1/upload/
+  dirPath: /Users/xuanxiao/Desktop/reggie-full-stack/reggie/upload/
   mailFrom: kcxuao@qq.com
 
 

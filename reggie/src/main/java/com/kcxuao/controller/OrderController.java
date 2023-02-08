@@ -38,8 +38,8 @@ public class OrderController {
 
     /**
      * 支付
-     * @param orders
-     * @return
+     * @param orders 订单信息
+     * @return ok
      */
     @PostMapping
     public R<String> pay(@RequestBody Orders orders) {
@@ -51,11 +51,11 @@ public class OrderController {
 
     /**
      * 请求订单列表
-     * @return
+     * @return 全部订单列表
      */
     @GetMapping
     public R<List<OrdersDto>> list() {
-        Long userId = Long.valueOf(RedisUtils.get("id"));
+        Long userId = Long.valueOf((String) RedisUtils.get("id"));
         log.info("请求订单列表 ==> {}", userId);
 
         LambdaQueryWrapper<Orders> lqw = new LambdaQueryWrapper<>();
@@ -79,14 +79,14 @@ public class OrderController {
 
     /**
      * 再来一单
-     * @param id
-     * @return
+     * @param id 订单ID
+     * @return ok
      */
     @GetMapping("/{id}")
     public R<String> encore(@PathVariable Long id) {
         log.info("再来一单 ==> {}", id);
 
-        long userId = Long.parseLong(RedisUtils.get("id"));
+        Long userId = Long.valueOf((String) RedisUtils.get("id"));
 
         // 获取当前订单的菜品明细
         LambdaQueryWrapper<OrderDetail> lqw = new LambdaQueryWrapper<>();

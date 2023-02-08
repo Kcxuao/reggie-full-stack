@@ -13,18 +13,18 @@ import java.util.concurrent.TimeUnit;
 public class RedisUtils {
 
 
-    public static RedisTemplate<String,String> redisTemplate;
+    public static RedisTemplate<Object,Object> redisTemplate;
 
     @Autowired
-    public RedisTemplate<String, String> setRedis(RedisTemplate<String,String> redisTemplate) {
+    public RedisTemplate<Object, Object> setRedis(RedisTemplate<Object,Object> redisTemplate) {
         return RedisUtils.redisTemplate = redisTemplate;
     }
 
-    public static void createRedis(String key, String value, Long time) {
+    public static void createRedis(String key, Object value, Long time) {
         redisTemplate.opsForValue().set(key, value, time, TimeUnit.HOURS);
     }
 
-    public static void createRedis(String key, String value, Long time, TimeUnit timeUnit) {
+    public static void createRedis(String key, Object value, Long time, TimeUnit timeUnit) {
         redisTemplate.opsForValue().set(key, value, time, timeUnit);
     }
 
@@ -32,7 +32,7 @@ public class RedisUtils {
         redisTemplate.delete(key);
     }
 
-    public static String get(String key) {
+    public static Object get(String key) {
         return redisTemplate.opsForValue().get(key);
     }
 

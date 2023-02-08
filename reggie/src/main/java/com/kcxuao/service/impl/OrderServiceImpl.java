@@ -35,14 +35,14 @@ public class OrderServiceImpl extends ServiceImpl<OrdersMapper, Orders> implemen
 
     /**
      * 支付
-     * @param orders
+     * @param orders 订单信息
      */
     @Override
     @Transactional
     public void pay(Orders orders) {
 
         // 请求购物车列表
-        Long userId = Long.valueOf(RedisUtils.get("id"));
+        long userId = (long) RedisUtils.get("id");
         LambdaQueryWrapper<ShoppingCart> lqw = new LambdaQueryWrapper<>();
         lqw.eq(ShoppingCart::getUserId, userId);
         List<ShoppingCart> shoppingCartList = shoppingCartService.list(lqw);

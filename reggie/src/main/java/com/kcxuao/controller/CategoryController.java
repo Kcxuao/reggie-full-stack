@@ -8,6 +8,8 @@ import com.kcxuao.domain.PageInfo;
 import com.kcxuao.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -24,8 +26,8 @@ public class CategoryController {
 
     /**
      * 分页
-     * @param pageInfo
-     * @return
+     * @param pageInfo 分页信息
+     * @return 分页数据
      */
     @PostMapping("/page")
     public R<Page<Category>> page(@RequestBody PageInfo pageInfo) {
@@ -41,11 +43,12 @@ public class CategoryController {
 
     /**
      * 保存 or 修改
-     * @param category
+     * @param category 分类
      * @param flag 1：修改分类 0：保存分类
-     * @return
+     * @return ok
      */
     @PostMapping("/{flag}")
+    @CacheEvict(value = "CategoryCache", allEntries = true)
     public R<String> saveOrUpdate(@RequestBody Category category, @PathVariable int flag) {
         log.info("新增 or 修改分类 ==> {} flag ==> {}", category, flag);
         categoryService.saveOrUpdate(category);
@@ -59,11 +62,12 @@ public class CategoryController {
 
     /**
      * 删除分类
-     * @param id
-     * @return
+     * @param id 分类id
+     * @return ok
      */
     @DeleteMapping("/{id}")
-    public R<String> delete(@PathVariable Long id) {
+    @CacheEvict(value = "CategoryCache", allEntries = true)
+    public R<String> delete(@PathVariable long id) {
         log.info("删除分类 ==> {}", id);
 
         categoryService.delete(id);
@@ -72,10 +76,11 @@ public class CategoryController {
 
     /**
      * 请求分类列表
-     * @param type
-     * @return
+     * @param type 0: 请求全部分类 1: 菜品分类 2: 套餐分类
+     * @return 分类列表
      */
     @GetMapping("/{type}")
+    @Cacheable(value = "CategoryCache", key = "#type", unless = "#result == null")
     public R<List<Category>> list(@PathVariable int type) {
         log.info("请求分类 ==> {}", type);
 
@@ -83,6 +88,7 @@ public class CategoryController {
         lqw.eq(Category::getType, type);
         List<Category> list = categoryService.list(lqw);
 
+        // 获取全部
         if (type == 0) {
             LambdaQueryWrapper<Category> lqw1 = new LambdaQueryWrapper<>();
             lqw1.orderByAsc(Category::getType);

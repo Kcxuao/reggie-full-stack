@@ -33,8 +33,8 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
 
     /**
      * 分页
-     * @param pageInfo
-     * @return
+     * @param pageInfo 分页信息
+     * @return 分页数据
      */
     @Override
     public Page<SetmealDto> page(PageInfo pageInfo) {
@@ -42,28 +42,36 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         Page<Setmeal> setMealPage = new Page<>(pageInfo.getPageNum(), pageInfo.getPageSize());
         Page<SetmealDto> setmealDtoPage = new Page<>();
 
+        // 查询套餐分页
         LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper = new LambdaQueryWrapper<>();
         setmealLambdaQueryWrapper.like(StringUtils.isNotEmpty(pageInfo.getName()), Setmeal::getName, pageInfo.getName())
                 .orderByDesc(Setmeal::getUpdateTime);
 
         this.page(setMealPage, setmealLambdaQueryWrapper);
+
+        // 将分页数据拷贝至dto类
         BeanUtils.copyProperties(setMealPage, setmealDtoPage, "records");
 
+        // 为套餐中的菜品赋予参数
         List<SetmealDto> setmealDtos = setMealPage.getRecords().stream().map(item -> {
             SetmealDto setmealDto = new SetmealDto();
 
-            Long categoryId = item.getCategoryId();
+            // 查询套餐
+            long categoryId = item.getCategoryId();
             Category category = categoryService.getById(categoryId);
 
             if (category != null) {
+                // 套餐存在，将分类名设置给dto
                 setmealDto.setCategoryName(category.getName());
             }
 
-            Long id = item.getId();
+            // 查询套餐明细
+            long id = item.getId();
             LambdaQueryWrapper<SetmealDish> setmealDishLambdaQueryWrapper = new LambdaQueryWrapper<>();
             setmealDishLambdaQueryWrapper.eq(SetmealDish::getSetmealId, id);
             List<SetmealDish> list = setmealDishService.list(setmealDishLambdaQueryWrapper);
 
+            // 为dto设置套餐明细
             setmealDto.setSetmealDishes(list);
             BeanUtils.copyProperties(item, setmealDto);
 
@@ -77,7 +85,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
 
     /**
      * 保存套餐
-     * @param setmealDto
+     * @param setmealDto 套餐DTO类
      */
     @Override
     public void saveSetMeal(SetmealDto setmealDto) {
@@ -103,8 +111,8 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
 
     /**
      * 更新套餐
-     * @param setmealDtos
-     * @param flag
+     * @param setmealDtos 套餐DTO类列表
+     * @param flag 0：删除 1：更新
      */
     @Override
     public void updateSetMeal(Collection<SetmealDto> setmealDtos, int flag) {
@@ -128,14 +136,14 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
 
     /**
      * 批量删除
-     * @param setmealDtos
+     * @param setmealDtos 套餐DTO类列表
      */
     @Override
     public void removeBatch(Collection<SetmealDto> setmealDtos) {
         for (SetmealDto setmealDto : setmealDtos) {
 
             if (setmealDto.getStatus() == 1) {
-                log.info("当前菜品未禁用，无法删除 ==> {}", setmealDto.getId());
+                log.info("当前套餐未禁用，无法删除 ==> {}", setmealDto.getId());
                 continue;
             }
 

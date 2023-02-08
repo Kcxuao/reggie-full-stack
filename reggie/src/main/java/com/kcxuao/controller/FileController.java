@@ -8,7 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -24,8 +26,8 @@ public class FileController {
 
     /**
      * 文件上传
-     * @param file
-     * @return
+     * @param file  文件流
+     * @return 文件名
      */
     @PostMapping
     public R<String> upload(MultipartFile file) {
@@ -37,7 +39,7 @@ public class FileController {
         String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
         
         // 生成新的文件名
-        String fileName = UUID.randomUUID().toString() + suffix;
+        String fileName = UUID.randomUUID() + suffix;
         
         // 判断目录是否存在，否则创建目录
         File dir = new File(dirPath);
@@ -56,8 +58,8 @@ public class FileController {
 
     /**
      * 文件下载
-     * @param name
-     * @param response
+     * @param name 文件名
+     * @param response 响应
      */
     @GetMapping("/{name}")
     public void download(@PathVariable String name, HttpServletResponse response) {

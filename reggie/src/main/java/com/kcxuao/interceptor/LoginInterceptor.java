@@ -44,7 +44,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
 
         String id = TokenUtils.verify(token);
-        String value = RedisUtils.get(id);
+        String value = (String) RedisUtils.get(id);
 
         if (value == null) {
             response.getWriter().write(JSON.toJSONString(R.error("token无效")));

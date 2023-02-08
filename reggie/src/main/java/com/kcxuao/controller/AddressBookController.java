@@ -3,6 +3,7 @@ package com.kcxuao.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.kcxuao.common.CustomException;
 import com.kcxuao.common.R;
 import com.kcxuao.Utils.RedisUtils;
 import com.kcxuao.domain.AddressBook;
@@ -26,18 +27,18 @@ public class AddressBookController {
 
     /**
      * 保存or更新
-     * @param addressBook
-     * @return
+     * @param addressBook 地址簿
+     * @return ok
      */
     @PostMapping
     public R<String> saveOrUpdate(@RequestBody AddressBook addressBook) {
-        Long userId = Long.valueOf(RedisUtils.get("id"));
+        Long userId = Long.valueOf((String) RedisUtils.get("id"));
         addressBook.setUserId(userId);
 
         try {
             addressBookService.saveOrUpdate(addressBook);
         } catch (Exception e) {
-            return R.error("参数不合法");
+            throw new CustomException("参数不合法");
         }
         log.info("保存地址 ==> {}", addressBook);
         return R.success("保存成功");
@@ -45,15 +46,15 @@ public class AddressBookController {
 
     /**
      * 设置默认地址
-     * @param id
-     * @return
+     * @param id 地址簿ID
+     * @return ok
      */
     @GetMapping("/{id}")
-    public R<String> setDefault(@PathVariable Long id) {
+    public R<String> setDefault(@PathVariable long id) {
         log.info("设置默认地址 ==> {}", id);
 
         // 取消其余地址默认属性
-        Long userId = Long.valueOf(RedisUtils.get("id"));
+        Long userId = Long.valueOf((String) RedisUtils.get("id"));
         LambdaUpdateWrapper<AddressBook> luw = new LambdaUpdateWrapper<>();
         luw.eq(AddressBook::getUserId, userId).set(AddressBook::getIsDefault, 0);
         addressBookService.update(luw);
@@ -68,8 +69,8 @@ public class AddressBookController {
 
     /**
      * 获取地址列表
-     * @param flag
-     * @return
+     * @param flag all：获取全部地址簿  default：获取默认地址簿
+     * @return 地址簿列表
      */
     @GetMapping("/list/{flag}")
     public R<List<AddressBook>> list(@PathVariable String flag) {
@@ -80,7 +81,7 @@ public class AddressBookController {
             lqw.eq(AddressBook::getIsDefault, 1);
         }
 
-        Long userId = Long.valueOf(RedisUtils.get("id"));
+        Long userId = Long.valueOf((String) RedisUtils.get("id"));
         lqw.eq(AddressBook::getUserId, userId);
         List<AddressBook> list = addressBookService.list(lqw);
 
@@ -94,15 +95,15 @@ public class AddressBookController {
 
     /**
      * 删除地址
-     * @param addressBook
-     * @return
+     * @param addressBook 地址簿信息
+     * @return ok
      */
     @DeleteMapping
     public R<String> remove(@RequestBody AddressBook addressBook) {
         log.info("删除地址 ==> {}", addressBook);
 
         if (addressBook.getIsDefault() == 1) {
-            return R.error("默认地址无法删除");
+            throw new CustomException("默认地址无法删除");
         }
 
         addressBookService.removeById(addressBook);

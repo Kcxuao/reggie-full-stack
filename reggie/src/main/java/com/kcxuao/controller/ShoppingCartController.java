@@ -1,13 +1,13 @@
 package com.kcxuao.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.kcxuao.common.R;
 import com.kcxuao.Utils.RedisUtils;
 import com.kcxuao.domain.ShoppingCart;
 import com.kcxuao.service.ShoppingCartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,12 +23,14 @@ public class ShoppingCartController {
     @Autowired
     private ShoppingCartService shoppingCartService;
 
+
     /**
      * 保存 or 修改
-     * @param shoppingCart
-     * @return
+     * @param shoppingCart 购物车数据
+     * @return 购物车数据
      */
     @PostMapping
+    @CacheEvict(value = "ShoppingCache", key = "#shoppingCart.userId")
     public R<ShoppingCart> saveOrUpdate(@RequestBody ShoppingCart shoppingCart) {
         log.info("新增购物车 ==> {}", shoppingCart);
 
@@ -63,60 +65,37 @@ public class ShoppingCartController {
 
     /**
      * 购物车列表
-     * @return
+     * @return 购物车商品列表
      */
     @GetMapping
     public R<List<ShoppingCart>> list() {
-        Long userId = Long.valueOf(RedisUtils.get("id"));
+        long userId = Long.parseLong((String) RedisUtils.get("id"));
         log.info("获取购物车列表 ==> {}", userId);
 
-        LambdaQueryWrapper<ShoppingCart> lqw = new LambdaQueryWrapper<>();
-        lqw.eq(ShoppingCart::getUserId, userId).orderByAsc(ShoppingCart::getCreateTime);
-        List<ShoppingCart> list = shoppingCartService.list(lqw);
+        List<ShoppingCart> list = shoppingCartService.list(userId);
         return R.success(list);
     }
 
     /**
      * 增加 or 减少数量
-     * @param id
-     * @param flag
-     * @return
+     * @param id 菜品 or 套餐ID
+     * @param flag 0：数量减一 1：数量加一
+     * @return ok
      */
     @PutMapping("/{id}/{flag}")
     public R<String> addOrSubNum(@PathVariable Long id, @PathVariable int flag) {
-        LambdaUpdateWrapper<ShoppingCart> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-
-        // 判断ID是否存在
-        ShoppingCart shop = shoppingCartService.getById(id);
-        if (shop == null) {
-            return R.success("id不存在");
-        }
-        if (flag == 1) {
-            // 增加
-            log.info("商品数量+1 ==> {}", id);
-            lambdaUpdateWrapper.setSql("number = number + 1");
-        } else {
-            // 减少
-            log.info("商品数量-1 ==> {}", id);
-            lambdaUpdateWrapper.setSql("number = number - 1");
-
-            if (shop.getNumber() <= 1) {
-                this.remove(id);
-            }
-        }
-
-        lambdaUpdateWrapper.eq(ShoppingCart::getId, id);
-        shoppingCartService.update(lambdaUpdateWrapper);
-
+        long userId = Long.parseLong((String) RedisUtils.get("id"));
+        shoppingCartService.addOrSubNum(id, flag, userId);
         return R.success("ok");
     }
 
     /**
      * 删除购物车
-     * @param id
-     * @return
+     * @param id 菜品 or 套餐ID
+     * @return ok
      */
     @DeleteMapping("/{id}")
+    @CacheEvict(value = "ShoppingCache", key = "#id")
     public R<String> remove(@PathVariable Long id) {
         log.info("删除购物车列表 ==> {}", id);
         shoppingCartService.removeById(id);
@@ -125,11 +104,12 @@ public class ShoppingCartController {
 
     /**
      * 清空购物车
-     * @return
+     * @return ok
      */
     @DeleteMapping("/clean")
+    @CacheEvict(value = "ShoppingCache", allEntries = true)
     public R<String> clean() {
-        Long userId = Long.valueOf(RedisUtils.get("id"));
+        Long userId = Long.valueOf((String) RedisUtils.get("id"));
         log.info("清空购物车 ==> {}", userId);
 
         LambdaQueryWrapper<ShoppingCart> lqw = new LambdaQueryWrapper<>();
