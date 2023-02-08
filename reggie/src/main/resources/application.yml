@@ -13,7 +13,7 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://10.211.55.31/reggie
+      url: jdbc:mysql://10.211.55.31:3306/reggie
       username: root
       password: Admin123.
       max-active: 20
@@ -35,8 +35,8 @@ spring:
         enabled: true
   mail:
     host: smtp.qq.com
-    username: 3187294487@qq.com
-    password: 123123
+    username:
+    password:
 
 mybatis-plus:
   configuration:
@@ -48,8 +48,8 @@ mybatis-plus:
       id-type: ASSIGN_ID
 
 reggie:
-  dirPath: /Users/xuanxiao/Desktop/reggie-vue3/reggie/upload/
-  mailFrom: 3187294487@qq.com
+  dirPath: reggie1/upload/
+  mailFrom: kcxuao@qq.com
 
 
 

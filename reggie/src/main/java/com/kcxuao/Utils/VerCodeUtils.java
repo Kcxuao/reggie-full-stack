@@ -1,8 +1,8 @@
 package com.kcxuao.Utils;
 
 
-
 import com.kcxuao.common.CustomException;
+
 import java.util.Random;
 
 /**
